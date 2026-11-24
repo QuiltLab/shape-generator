@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { generateDoyleCircles, Circle } from '@/lib/spiralGenerator';
+import { useState, useMemo, useRef } from 'react';
+import { generateDoyleCircles } from '@/lib/spiralGenerator';
 
 interface Preset {
   name: string;
@@ -29,28 +29,23 @@ export default function SpiralVisualizer() {
   const [strokeColor, setStrokeColor] = useState('#000000');
   const [fillColor, setFillColor] = useState('#ffffff');
   const [backgroundColor, setBackgroundColor] = useState('#2b2b2b');
-  const [circles, setCircles] = useState<Circle[]>([]);
-  const [error, setError] = useState<string>('');
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const svgRef = useRef<SVGSVGElement>(null);
 
-  useEffect(() => {
-    generateSpiral();
-  }, [p, q, rows, prunePercentile]);
-
-  const generateSpiral = () => {
+  const { circles, error } = useMemo(() => {
     try {
-      setError('');
       const result = generateDoyleCircles(p, q, rows, undefined, undefined, prunePercentile);
-      setCircles(result.circles);
+      return { circles: result.circles, error: '' };
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Failed to generate spiral');
-      setCircles([]);
+      return {
+        circles: [],
+        error: e instanceof Error ? e.message : 'Failed to generate spiral',
+      };
     }
-  };
+  }, [p, q, rows, prunePercentile]);
 
   const getSVGBounds = () => {
     if (circles.length === 0) return { minX: -100, maxX: 100, minY: -100, maxY: 100, width: 200, height: 200 };
